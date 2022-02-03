@@ -31,7 +31,7 @@ async def async_processor():
                     data = f"{code}:{name}"
 
             consumer_writer.write(data.encode())
-            await consumer_writer.drain()
+            # await consumer_writer.drain()
         else:
             producer_writer.close()
             await producer_writer.wait_closed()
@@ -44,5 +44,4 @@ if __name__ == "__main__":
     start_time = time.time()
     loop = asyncio.get_event_loop()
     loop.run_until_complete(async_processor())
-    # asyncio.run(async_processor())
     print(f"Total time taken: {time.time() - start_time}")
