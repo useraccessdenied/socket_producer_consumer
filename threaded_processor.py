@@ -1,6 +1,7 @@
 import socket
 import requests
-from threading import Thread, Lock
+from threading import current_thread
+from concurrent.futures import ThreadPoolExecutor
 import time
 
 producer_ip = "" or socket.gethostname()
@@ -18,30 +19,29 @@ def processor():
         consumer = socket.socket()
         consumer.connect((consumer_ip, consumer_port))
 
-        consumer_writer_lock = Lock()
-
         def process_data(url):
+            t = current_thread()
+            print(f"{t.name}: Processing for: {url}")
             r = requests.get(url)
             consumer_data = str(r.status_code)
             if r.ok:
                 json_data = r.json()
                 consumer_data += f":{json_data['name']}"
-            # consumer_writer_lock.acquire()
+            consumer_data = consumer_data.rjust(data_size, "\0")
             consumer.send(f"{consumer_data}".encode())
-            # consumer_writer_lock.release()
 
-        while True:
-            data = producer.recv(data_size).decode()
-            if data:
-                data = data.strip().strip('\x00')
-                url = f"https://pokeapi.co/api/v2/pokemon/{data}"
-                print(f"Processing for {data}: {url}")
-                Thread(target=process_data, args=[url]).run()
+        with ThreadPoolExecutor(max_workers=10) as tpe:
+            while True:
+                data = producer.recv(data_size).decode()
+                if data:
+                    data = data.strip().strip('\x00')
+                    url = f"https://pokeapi.co/api/v2/pokemon/{data}"
+                    tpe.submit(process_data, url)
 
-            else:
-                producer.close()
-                consumer.close()
-                break
+                else:
+                    producer.close()
+                    consumer.close()
+                    break
 
     except ConnectionRefusedError:
         print("Server not running!")
