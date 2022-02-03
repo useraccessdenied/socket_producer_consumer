@@ -22,6 +22,7 @@ def producer():
             print(f"Got connection from {addr}")
             for i in range(100):
                 data = f"{random.randint(1, 100)}"
+                # print(f"Sent {data}", end="\r")
                 data = data.rjust(data_size, "\0")
 
                 # time.sleep(random.random())
