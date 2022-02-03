@@ -1,6 +1,7 @@
 import socket
 import requests
 from threading import Thread, Lock
+import time
 
 producer_ip = "" or socket.gethostname()
 producer_port = 8000
@@ -51,4 +52,6 @@ def processor():
 
 
 if __name__ == "__main__":
+    start_time = time.time()
     processor()
+    print(f"Total time taken: {time.time() - start_time}")
