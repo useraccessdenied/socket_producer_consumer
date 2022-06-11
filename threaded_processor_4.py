@@ -14,6 +14,18 @@ producer.connect((producer_ip, producer_port))
 
 data_size = 32
 
+class BidQueue(Queue):
+    def get_25_items(self):
+        items = []
+        counter = 25
+        with self.mutex:
+            while self._qsize() and counter:
+                items.append(self._get())
+                counter -= 1
+            self.not_full.notify()
+
+            return items
+
 cons_queue = Queue()
 tpe = ThreadPoolExecutor(max_workers=30)
 
